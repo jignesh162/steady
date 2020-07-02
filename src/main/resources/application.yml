@@ -1,0 +1,54 @@
+spring:
+  profiles:
+    active: dev
+  jpa:
+    open-in-view: false
+springdoc:
+  api-docs:
+    groups:
+      enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+    docExpansion: 'none'
+  version: '@springdoc.version@'
+jasypt:
+  encryptor:
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+    password: ${JASYPT_ENCRYPTOR_PASSWORD:}
+steady:
+  version: 1.0-beta
+
+---
+
+spring:
+  profiles: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/steadydb?currentSchema=steady
+    driverClassName: org.postgresql.Driver
+    username: postgres
+    password: ENC(TrHGe0xrhgQY/jANCaiAHrDdn3CWGYff)
+    platform: postgres
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    show-sql: true
+    properties:
+      hibernate:
+        default_schema: steady
+      javax:
+        persistence:
+          schema-generation:
+            create-source: metadata
+            scripts:
+              action: create
+              create-target: target/data-postgres.sql
+name: dev-YAML
+environment: dev
+servers:
+  - localhost:8383
+server:
+  port: 8383
+jwt:
+  secret: ENC(sUFhrnVPtAPMA1WaL7+3ssQix21bGOAp)
+  expirationMs: 86400000
