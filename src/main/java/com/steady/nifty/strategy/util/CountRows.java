@@ -15,7 +15,7 @@ public class CountRows {
     private Integer wdayRows = 0;
 
     public static void main(String[] args) {
-        CountRows countRows = new CountRows("C://Learn//OriginalData//INDICES//01JAN", "C://Learn//OriginalData//NIFTY_OPTIONS//01JAN");
+        /*CountRows countRows = new CountRows("C://Learn//OriginalData//INDICES//01JAN", "C://Learn//OriginalData//NIFTY_OPTIONS//01JAN");
         countRows.run();
         
         CountRows countRows1 = new CountRows("C://Learn//OriginalData//INDICES//02FEB", "C://Learn//OriginalData//NIFTY_OPTIONS//02FEB");
@@ -31,36 +31,54 @@ public class CountRows {
         countRows4.run();
        
         CountRows countRow5 = new CountRows("C://Learn//OriginalData//INDICES//06JUN", "C://Learn//OriginalData//NIFTY_OPTIONS//06JUN");
+        countRow5.run(); */
+
+        CountRows countRows = new CountRows("C://Learn//OriginalData//INDICES//07JUL", "C://Learn//OriginalData//NIFTY_OPTIONS//07JUL");
+        countRows.run();
+        
+        CountRows countRows1 = new CountRows("C://Learn//OriginalData//INDICES//08AUG", "C://Learn//OriginalData//NIFTY_OPTIONS//08AUG");
+        countRows1.run();
+        
+        CountRows countRows2 = new CountRows("C://Learn//OriginalData//INDICES//09SEP", "C://Learn//OriginalData//NIFTY_OPTIONS//09SEP");
+        countRows2.run();
+        
+        CountRows countRows3 = new CountRows("C://Learn//OriginalData//INDICES//10OCT", "C://Learn//OriginalData//NIFTY_OPTIONS//10OCT");
+        countRows3.run();
+        
+        CountRows countRows4 = new CountRows("C://Learn//OriginalData//INDICES//11NOV", "C://Learn//OriginalData//NIFTY_OPTIONS//11NOV");
+        countRows4.run();
+       
+        CountRows countRow5 = new CountRows("C://Learn//OriginalData//INDICES//12DEC", "C://Learn//OriginalData//NIFTY_OPTIONS//12DEC");
         countRow5.run();
        
         ///////
 
-        System.out.println("GFDLNFO_OPTIONS_01012018 Nifty rows : "+countRows.niftyRows);
+        System.out.println("countRows : "+countRows.niftyRows);
         System.out.println("Vix rows : "+countRows.vixRows);
         System.out.println("Tick rows : "+countRows.tickRows);
         System.out.println("WDay rows : "+countRows.wdayRows);
 
-        System.out.println("GFDLNFO_OPTIONS_02012018 Nifty rows : "+countRows1.niftyRows);
+        System.out.println("countRows1 : "+countRows1.niftyRows);
         System.out.println("Vix rows : "+countRows1.vixRows);
         System.out.println("Tick rows : "+countRows1.tickRows);
         System.out.println("WDay rows : "+countRows1.wdayRows);
 
-        System.out.println("GFDLNFO_OPTIONS_03012018 Nifty rows : "+countRows2.niftyRows);
+        System.out.println("countRows2 : "+countRows2.niftyRows);
         System.out.println("Vix rows : "+countRows2.vixRows);
         System.out.println("Tick rows : "+countRows2.tickRows);
         System.out.println("WDay rows : "+countRows2.wdayRows);
 
-        System.out.println("GFDLNFO_OPTIONS_04012018 Nifty rows : "+countRows3.niftyRows);
+        System.out.println("countRows3 : "+countRows3.niftyRows);
         System.out.println("Vix rows : "+countRows3.vixRows);
         System.out.println("Tick rows : "+countRows3.tickRows);
         System.out.println("WDay rows : "+countRows3.wdayRows);
 
-        System.out.println("GFDLNFO_OPTIONS_05012018 Nifty rows : "+countRows4.niftyRows);
+        System.out.println("countRows4 : "+countRows4.niftyRows);
         System.out.println("Vix rows : "+countRows4.vixRows);
         System.out.println("Tick rows : "+countRows4.tickRows);
         System.out.println("WDay rows : "+countRows4.wdayRows);
 
-        System.out.println("GFDLNFO_OPTIONS_08012018 Nifty rows : "+countRow5.niftyRows);
+        System.out.println("countRow5 : "+countRow5.niftyRows);
         System.out.println("Vix rows : "+countRow5.vixRows);
         System.out.println("Tick rows : "+countRow5.tickRows);
         System.out.println("WDay rows : "+countRow5.wdayRows);
@@ -79,16 +97,16 @@ public class CountRows {
         try {
             execute(indicesPath, tickPath);
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println(e.toString());
         }
     }
 
     public void execute(String indicesPath, String tickPath) throws IOException {
         File indicesFolder = new File(indicesPath);
         if (indicesFolder.exists() && indicesFolder.isDirectory()) {
-            System.out.println("******** Data loading in progress for INDICES *********\n");
+            //System.out.println("******** Data loading in progress for INDICES *********\n");
             goThroughIndicesFiles(indicesFolder.listFiles());
-            System.out.println("******** Data successfully loaded for INDICES *********\n");
+            //System.out.println("******** Data successfully loaded for INDICES *********\n");
         } else {
             System.out.println("ERROR: Couldn't find INDICES folder.\n");
         }
@@ -96,13 +114,12 @@ public class CountRows {
         // Load NIFTY OPTIONS tick data
         File niftyOptionsFolder = new File(tickPath);
         if (niftyOptionsFolder.exists() && niftyOptionsFolder.isDirectory()) {
-            System.out.println("******** Data loading in progress for NIFTY OPTIONS *********\n");
+           // System.out.println("******** Data loading in progress for NIFTY OPTIONS *********\n");
             goThroughNiftyOptionsFiles(niftyOptionsFolder.listFiles());
-            System.out.println("******** Data successfully loaded for NIFTY OPTIONS *********\n");
+           // System.out.println("******** Data successfully loaded for NIFTY OPTIONS *********\n");
         } else {
             System.out.println("ERROR: Couldn't find NIFTY OPTIONS folder.\n");
         }
-        System.out.println("******** DB connection closed *********\n");
     }
 
     private void goThroughNiftyOptionsFiles(File[] listOfNiftyOptionsFiles) throws IOException {
@@ -110,7 +127,7 @@ public class CountRows {
             if (listOfNiftyOptionsFiles[i].isFile()) {
                 insertIntoNiftyOptions(listOfNiftyOptionsFiles[i]);
             } else if (listOfNiftyOptionsFiles[i].isDirectory()) {
-                System.out.println("Directory found inside NIFTY OPTIONS folder - " + listOfNiftyOptionsFiles[i].getName()+"\n");
+                //System.out.println("Directory found inside NIFTY OPTIONS folder - " + listOfNiftyOptionsFiles[i].getName()+"\n");
                 goThroughNiftyOptionsFiles(listOfNiftyOptionsFiles[i].listFiles());
             }
         }
@@ -136,7 +153,7 @@ public class CountRows {
             }
             this.tickRows = this.tickRows + rowCount;
             lineReader.close();
-            System.out.println("Options tick file : " + filePath + " row count - "+rowCount+"\n");
+            //System.out.println("Options tick file : " + filePath + " row count - "+rowCount+"\n");
         } catch (IOException e) {
             System.out.println("ERROR: IO exception caught while inserting options tick - " + filePath + " Exception - "
                     + e.getMessage() + "\n");
@@ -149,15 +166,15 @@ public class CountRows {
             if (listOfIndicesFiles[i].isFile()) {
                 if (listOfIndicesFiles[i].getName().startsWith("INDIA")) {
                     insertIntoIndices(listOfIndicesFiles[i].getPath(), "VIX");
-                    System.out.println("VIX file- " + listOfIndicesFiles[i].getPath() + "\n");
+                    //System.out.println("VIX file- " + listOfIndicesFiles[i].getPath() + "\n");
                 } else if (listOfIndicesFiles[i].getName().startsWith("NIFTY")) {
                     insertIntoIndices(listOfIndicesFiles[i].getPath(), "NIFTY");
-                    System.out.println("Nifty file- " + listOfIndicesFiles[i].getPath() + "\n");
+                    //System.out.println("Nifty file- " + listOfIndicesFiles[i].getPath() + "\n");
                 } else {
                     System.out.println("ERROR: Incorrect file name - " + listOfIndicesFiles[i].getName() + "\n");
                 }
             } else if (listOfIndicesFiles[i].isDirectory()) {
-                System.out.println("Directory found inside INDICES folder - " + listOfIndicesFiles[i].getName() + "\n");
+                //System.out.println("Directory found inside INDICES folder - " + listOfIndicesFiles[i].getName() + "\n");
                 goThroughIndicesFiles(listOfIndicesFiles[i].listFiles());
             }
         }
@@ -180,18 +197,18 @@ public class CountRows {
                 } else if("VIX".equals(tableName)){
                     this.vixRows++;
                 }else {
-                    System.out.println("ERROR");
+                    System.out.println("ERROR: Wrong table name.");
                 }
             }
 
             if("NIFTY".equals(tableName)) {
                 this.niftyRows = this.niftyRows + rowCount;
-                System.out.println("Nifty file : " + filePath + " row count - "+rowCount+"\n");
+                //System.out.println("Nifty file : " + filePath + " row count - "+rowCount+"\n");
             } else if("VIX".equals(tableName)){
                 this.vixRows = this.vixRows + rowCount;
-                System.out.println("Vix file : " + filePath + " row count - "+rowCount+"\n");
+               // System.out.println("Vix file : " + filePath + " row count - "+rowCount+"\n");
             }else {
-                System.out.println("ERROR2");
+                //System.out.println("ERROR: Wrong table name.");
             }
             lineReader.close();
         } catch (IOException e) {

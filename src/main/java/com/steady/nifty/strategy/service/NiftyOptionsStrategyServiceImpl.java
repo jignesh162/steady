@@ -12,6 +12,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -72,8 +74,9 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
             // Get nifty value at entry time
             List<Nifty> niftyValues = niftyRepository.findNiftyTicksForDay(entryDateTime, exitDateTime);
 
-            if(niftyValues.isEmpty()) {
-                throw new EntityNotFoundException(Translator.toLocale("entityNotFoundExceptionMessage", entryDateTime.toString()));
+            if (niftyValues.isEmpty()) {
+                throw new EntityNotFoundException(
+                        Translator.toLocale("entityNotFoundExceptionMessage", entryDateTime.toString()));
             }
 
             // Logic to decide entry point for the nifty
@@ -102,7 +105,8 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
             logs.append("putStrikePrice:: " + putStrikePrice + "\n");
 
             // Get expiry date for the month from working_day entity
-            LocalDate expiryDate = workingDayRepository.findMonthEndExpiryByMonthAndYear(exitDateTime.getMonthValue(), exitDateTime.getYear());
+            LocalDate expiryDate = workingDayRepository.findMonthEndExpiryByMonthAndYear(exitDateTime.getMonthValue(),
+                    exitDateTime.getYear());
             response.setExpiryDate(expiryDate.toString());
             logs.append("Expiry date :: " + expiryDate + "\n");
             Integer ceId = niftyOptionsDetailsRepository
@@ -115,42 +119,44 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
             logs.append("CE Found :: " + ceId + "\n");
             logs.append("PE Found :: " + peId + "\n");
             Map<LocalDateTime, OptionsTick> ceOptionsTickMap = new HashMap<>();
-            List<OptionsTick> optionsTickCE = niftyOptionsTickRepository.findByOptionsId(niftyEntryTime, exitDateTime, ceId);
+            List<OptionsTick> optionsTickCE = niftyOptionsTickRepository.findByOptionsId(niftyEntryTime, exitDateTime,
+                    ceId);
             for (OptionsTick optionsTick : optionsTickCE) {
-                //logs.append("dateTime: "+optionsTick.getDateTime().toString() 
-                //+" ltp: " + optionsTick.getLtp() + "\n");
+                // logs.append("dateTime: "+optionsTick.getDateTime().toString()
+                // +" ltp: " + optionsTick.getLtp() + "\n");
                 ceOptionsTickMap.put(optionsTick.getDateTime(), optionsTick);
 
-                if(niftyEntryTime.isEqual(optionsTick.getDateTime())) {
+                if (niftyEntryTime.isEqual(optionsTick.getDateTime())) {
                     logs.append("CE same tick data found :: " + optionsTick.getDateTime().toString() + "\n");
                 }
             }
-            logs.append("CE tick data found :: " + "\n\n\n\n\n");
 
             Map<LocalDateTime, OptionsTick> peOptionsTickMap = new HashMap<>();
-            List<OptionsTick> optionsTickPE = niftyOptionsTickRepository.findByOptionsId(niftyEntryTime, exitDateTime, peId);
+            List<OptionsTick> optionsTickPE = niftyOptionsTickRepository.findByOptionsId(niftyEntryTime, exitDateTime,
+                    peId);
             for (OptionsTick optionsTick : optionsTickPE) {
-               //logs.append("dateTime: "+optionsTick.getDateTime().toString() 
-               //+" ltp: " + optionsTick.getLtp() + "\n");
+                // logs.append("dateTime: "+optionsTick.getDateTime().toString()
+                // +" ltp: " + optionsTick.getLtp() + "\n");
                 peOptionsTickMap.put(optionsTick.getDateTime(), optionsTick);
-                if(niftyEntryTime.isEqual(optionsTick.getDateTime())) {
+                if (niftyEntryTime.isEqual(optionsTick.getDateTime())) {
                     logs.append("PE same tick data found :: " + optionsTick.getDateTime().toString() + "\n");
                 }
             }
-            logs.append("PE tick data found :: " + "\n");
 
-            //Decide how much quantity you can buy
-            BigDecimal cePrice = getNotNullTickData(new OptionsTick(), niftyEntryTime, ceOptionsTickMap, "CE", logs).getLtp();
-            OptionsTick peOptionsTick = getNotNullTickData(new OptionsTick(), niftyEntryTime, peOptionsTickMap, "PE", logs);
+            // Decide how much quantity you can buy
+            BigDecimal cePrice = getNotNullTickData(new OptionsTick(), niftyEntryTime, ceOptionsTickMap, "CE", logs)
+                    .getLtp();
+            OptionsTick peOptionsTick = getNotNullTickData(new OptionsTick(), niftyEntryTime, peOptionsTickMap, "PE",
+                    logs);
             BigDecimal pePrice = peOptionsTick.getLtp();
 
             BigDecimal cePerLotPrice = cePrice.multiply(BigDecimal.valueOf(75));
             BigDecimal pePerLotPrice = pePrice.multiply(BigDecimal.valueOf(75));
-            
+
             Integer ceLots = 0;
             Integer peLots = 0;
-            if("quantity".equalsIgnoreCase(quantityOrPrice)) {
-                //Same quantity of PE and CE
+            if ("quantity".equalsIgnoreCase(quantityOrPrice)) {
+                // Same quantity of PE and CE
                 logs.append("Same quantity for CE and PE...... \n");
 
                 BigDecimal combinationLotPrice = cePerLotPrice.add(pePerLotPrice);
@@ -159,21 +165,25 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
                 ceLots = numberOfLotCanBuy;
                 peLots = numberOfLotCanBuy;
 
-                logs.append("CE number of lots : " + ceLots + " at price : " + cePerLotPrice + " total : " +  cePerLotPrice.multiply(BigDecimal.valueOf(ceLots)) + "\n");
-                logs.append("PE number of lots : " + peLots + " at price : " + pePerLotPrice + " total : " +  pePerLotPrice.multiply(BigDecimal.valueOf(peLots)) + "\n");
+                logs.append("CE number of lots : " + ceLots + " at price : " + cePerLotPrice + " total : "
+                        + cePerLotPrice.multiply(BigDecimal.valueOf(ceLots)) + "\n");
+                logs.append("PE number of lots : " + peLots + " at price : " + pePerLotPrice + " total : "
+                        + pePerLotPrice.multiply(BigDecimal.valueOf(peLots)) + "\n");
 
             } else {
-                //Same amount for PE and CE
+                // Same amount for PE and CE
                 logs.append("Same amount for Ce and PE......\n");
 
                 BigDecimal sameAmountAvailableForPEOrCE = initialAmount.divide(BigDecimal.valueOf(2), RoundingMode.UP);
                 ceLots = sameAmountAvailableForPEOrCE.divideToIntegralValue(cePerLotPrice).intValue();
                 peLots = sameAmountAvailableForPEOrCE.divideToIntegralValue(pePerLotPrice).intValue();
-                logs.append("CE number of lots : " + ceLots + " at price : " + cePerLotPrice + " total : " +  cePerLotPrice.multiply(BigDecimal.valueOf(ceLots)) + "\n");
-                logs.append("PE number of lots : " + peLots + " at price : " + pePerLotPrice + " total : " +  pePerLotPrice.multiply(BigDecimal.valueOf(peLots)) + "\n");
+                logs.append("CE number of lots : " + ceLots + " at price : " + cePerLotPrice + " total : "
+                        + cePerLotPrice.multiply(BigDecimal.valueOf(ceLots)) + "\n");
+                logs.append("PE number of lots : " + peLots + " at price : " + pePerLotPrice + " total : "
+                        + pePerLotPrice.multiply(BigDecimal.valueOf(peLots)) + "\n");
             }
 
-            //Price reading
+            // Price reading
             BigDecimal peInvestmentAmount = pePerLotPrice.multiply(BigDecimal.valueOf(peLots));
             BigDecimal ceInvestmentAmount = cePerLotPrice.multiply(BigDecimal.valueOf(ceLots));
             BigDecimal totalInvestment = ceInvestmentAmount.add(peInvestmentAmount);
@@ -189,14 +199,15 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
             response.setCeBuyAmount(ceInvestmentAmount);
 
             response.setBuyAmount(totalInvestment);
-            response.setBuyPercentage(totalInvestment.multiply(new BigDecimal(100)).divide(initialAmount, RoundingMode.HALF_UP));
+            response.setBuyPercentage(
+                    totalInvestment.multiply(new BigDecimal(100)).divide(initialAmount, RoundingMode.HALF_UP));
             response.setBuyDateTime(peOptionsTick.getDateTime().toString());
-            logs.append("totalInvestment : " + totalInvestment  + "\n");
+            logs.append("totalInvestment : " + totalInvestment + "\n");
 
             BigDecimal maxTotal = BigDecimal.ZERO;
             BigDecimal minTotal = BigDecimal.ZERO;
             boolean isFirstEntry = true;
-            LocalDateTime maxValueTime = niftyEntryTime; 
+            LocalDateTime maxValueTime = niftyEntryTime;
             LocalDateTime minValueTime = niftyEntryTime;
             OptionsTick ceLastTradedTick = null;
             OptionsTick peLastTradedTick = null;
@@ -215,41 +226,37 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
 
             List<OptionsTickGraphLine> optionsTickGraphLineList = new ArrayList<>();
 
-            OptionsTickGraphLine ceGraphLine = new OptionsTickGraphLine("CE_"+strike+"_"+expiryDate);
-            OptionsTickGraphLine peGraphLine = new OptionsTickGraphLine("PE_"+strike+"_"+expiryDate);
+            OptionsTickGraphLine ceGraphLine = new OptionsTickGraphLine("CE_" + strike + "_" + expiryDate);
+            OptionsTickGraphLine peGraphLine = new OptionsTickGraphLine("PE_" + strike + "_" + expiryDate);
 
             int counter = 0;
 
             long secondsBetween = ChronoUnit.SECONDS.between(entryDateTime, exitDateTime);
-            long daysBetween = ChronoUnit.DAYS.between(entryDateTime, exitDateTime) == 0 ? 1 : ChronoUnit.DAYS.between(entryDateTime, exitDateTime);
+            long daysBetween = ChronoUnit.DAYS.between(entryDateTime, exitDateTime) == 0 ? 1
+                    : ChronoUnit.DAYS.between(entryDateTime, exitDateTime);
             long modulo = 60 * daysBetween;
             long moduloSeconds = secondsBetween / 22500;
-            System.out.println("secondsBetween: "+ secondsBetween + "  daysBetween: "+ daysBetween + "  modulo: "+ modulo + "  moduloSeconds: "+ moduloSeconds);
+            System.out.println("secondsBetween: " + secondsBetween + "  daysBetween: " + daysBetween + "  modulo: "
+                    + modulo + "  moduloSeconds: " + moduloSeconds);
 
-            for (OptionsTick optionsTick : optionsTickCE) {
-                ceCurrentPrice = optionsTick.getLtp();
-                ceLastTradedTick = optionsTick;
+            boolean matchCEAndPEPrices = ceOptionsTickMap.keySet().retainAll(peOptionsTickMap.keySet());
+            System.out.println("matchCEAndPEPrices" + matchCEAndPEPrices);
 
-                OptionsTick peCurrentTick = getNotNullTickData(peLastTradedTick, optionsTick.getDateTime(), peOptionsTickMap, "PE", logs);
-                peLastTradedTick = peCurrentTick;
+            for (Entry<LocalDateTime, OptionsTick> ceOptionsTick : ceOptionsTickMap.entrySet()) {
+                ceLastTradedTick = ceOptionsTick.getValue();
+                ceCurrentPrice = ceLastTradedTick.getLtp();
+
+                peLastTradedTick = peOptionsTickMap.get(ceOptionsTick.getKey());
+                peCurrentPrice = peLastTradedTick.getLtp();
 
                 //Date times is same for pe and ce????
                 if(counter >= moduloSeconds) {
-                    ceGraphLine.getSeries().add(new GraphSeriesOnePoint(peLastTradedTick.getDateTime().toString(), ceLastTradedTick.getLtp().toString()));
-                    peGraphLine.getSeries().add(new GraphSeriesOnePoint(peLastTradedTick.getDateTime().toString(), peLastTradedTick.getLtp().toString()));
+                    ceGraphLine.getSeries().add(new GraphSeriesOnePoint(ceOptionsTick.getKey().toString(), ceCurrentPrice.toString()));
+                    peGraphLine.getSeries().add(new GraphSeriesOnePoint(ceOptionsTick.getKey().toString(), peCurrentPrice.toString()));
                     counter = 0;
                 } else {
                     counter = counter + 1;
                 }
- 
-                //CE and PE tick time doesnt match. Find CE price for the same
-                long seconds = peCurrentTick.getDateTime().until( optionsTick.getDateTime(), ChronoUnit.SECONDS );
-                if(seconds >= 2 ) {
-                    //OptionsTick ceCurrentTick = getNotNullTickData(ceLastTradedTick, peLastTradedTick.getDateTime(), peOptionsTickMap, "CE", logs);
-                    logs.append("CE tick time - " + optionsTick.getDateTime() + " and PE tick time - " + peCurrentTick.getDateTime() + "\n");
-                }
-
-                peCurrentPrice = peCurrentTick.getLtp();
 
                 cePerLotCurrentPrice = ceCurrentPrice.multiply(BigDecimal.valueOf(75));
                 pePerLotCurrentPrice = peCurrentPrice.multiply(BigDecimal.valueOf(75));
@@ -260,19 +267,17 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
                 currentTotalValue = ceCurrentTotalValue.add(peCurrentTotalValue);
 
                 if(isFirstEntry) {
-                    minTotal = currentTotalValue;
-                    maxTotal = currentTotalValue;
-                    maxValueTime = optionsTick.getDateTime();
-                    minValueTime = optionsTick.getDateTime();
+                    minTotal = maxTotal = currentTotalValue;
+                    maxValueTime = minValueTime = ceOptionsTick.getKey();
                     isFirstEntry = false; 
                 } else {
                     if ( currentTotalValue.subtract(maxTotal).doubleValue() > 0 ) {
                         maxTotal = currentTotalValue;
-                        maxValueTime = optionsTick.getDateTime();
+                        maxValueTime = ceOptionsTick.getKey();
                     }
                     if ( currentTotalValue.subtract(minTotal).doubleValue() <= 0 ) {
                         minTotal = currentTotalValue;
-                        minValueTime = optionsTick.getDateTime();
+                        minValueTime = ceOptionsTick.getKey();
                     }
                 }
 
@@ -298,7 +303,7 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
                     
                     response.setProfitOrLossAmount(plusAmount);
                     response.setProfitOrLossPercentage(upPercentage);
-                    response.setProfitOrLossDateTime(peLastTradedTick.getDateTime().toString());
+                    response.setProfitOrLossDateTime(ceOptionsTick.getKey().toString());
 
                     response.setDeInvestmentAmount(maxTotal);
                     response.setBalanceAmount(initialAmount.add(plusAmount));
@@ -321,7 +326,7 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
                     
                     response.setProfitOrLossAmount(minusAmount.negate());
                     response.setProfitOrLossPercentage(downPercentage);
-                    response.setProfitOrLossDateTime(peLastTradedTick.getDateTime().toString());
+                    response.setProfitOrLossDateTime(ceOptionsTick.getKey().toString());
 
                     response.setDeInvestmentAmount(minTotal);
                     response.setBalanceAmount(initialAmount.subtract(minusAmount));
@@ -343,6 +348,7 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
             response.setLowestAmountDateTime(minValueTime.toString());
             response.setHighestPercentage(plusAmount.multiply(new BigDecimal(100)).divide(totalInvestment, RoundingMode.HALF_UP));
             response.setLowestPercentage(minusAmount.multiply(new BigDecimal(100)).divide(totalInvestment, RoundingMode.HALF_UP));
+            //Graph
             optionsTickGraphLineList.add(ceGraphLine);
             optionsTickGraphLineList.add(peGraphLine);
             OptionsTickGraph optionsTickGraph = new OptionsTickGraph();
@@ -355,7 +361,7 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
                 response.setSellPercentage(differenceAmount.multiply(new BigDecimal(100)).divide(totalInvestment, RoundingMode.HALF_UP));
                 response.setSellAmount(differenceAmount);
 
-                response.setPeSellPrice(peLastTradedTick.getLtp());
+                response.setPeSellPrice(peCurrentPrice);
                 response.setPeSellPricePerLot(pePerLotCurrentPrice);
                 response.setPeSellAmount(peCurrentTotalValue);
 
@@ -424,7 +430,7 @@ public class NiftyOptionsStrategyServiceImpl implements NiftyOptionsStrategyServ
             logs.append("Go beyond trading time " + optionType + " at " + dateTime.toString() + "\n");
             return lastTradedTick;
         }
-        //logs.append("Couldn't find price for the " + optionType + " at " + dateTime.toString() + "\n");
+        logs.append("Couldn't find price for the " + optionType + " at " + dateTime.toString() + "\n");
         return getNotNullTickData(lastTradedTick, dateTime.plusSeconds(1), optionsTickMap, optionType, logs);
     }
 }

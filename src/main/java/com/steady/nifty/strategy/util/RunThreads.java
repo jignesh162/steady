@@ -1,9 +1,11 @@
 package com.steady.nifty.strategy.util;
 
+import java.io.File;
+
 public class RunThreads {
     public static void main(String[] args) 
     { 
-        LoadDatabase janLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//01JAN", "C://Learn//OriginalData//NIFTY_OPTIONS//01JAN");
+        /*LoadDatabase janLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//01JAN", "C://Learn//OriginalData//NIFTY_OPTIONS//01JAN");
         janLoadDatabase.start();
         LoadDatabase febLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//02FEB", "C://Learn//OriginalData//NIFTY_OPTIONS//02FEB");
         febLoadDatabase.start();
@@ -14,10 +16,24 @@ public class RunThreads {
         LoadDatabase mayLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//05MAY", "C://Learn//OriginalData//NIFTY_OPTIONS//05MAY");
         mayLoadDatabase.start();
         LoadDatabase junLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//06JUN", "C://Learn//OriginalData//NIFTY_OPTIONS//06JUN");
-        junLoadDatabase.start();
+        junLoadDatabase.start();*/
+
+        /*File mainFolder = new File("C://Learn//OriginalData//NIFTY_OPTIONS//07JUL");
+        if (mainFolder.exists() && mainFolder.isDirectory()) {
+            for (int i = 0; i < mainFolder.listFiles().length; i++) {
+                if (mainFolder.listFiles()[i].isFile()) {
+                    System.out.println("ERROR: File can't be process...." + mainFolder.listFiles()[i].getPath() + "\n");
+                } else if (mainFolder.listFiles()[i].isDirectory()) {
+                    LoadDatabase loadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//07JUL", mainFolder.listFiles()[i].getPath());
+                    loadDatabase.start();
+                }
+            }
+        } else {
+            System.out.println("ERROR: Couldn't find folder.\n");
+        }*/
 
         /*LoadDatabase julLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//07JUL", "C://Learn//OriginalData//NIFTY_OPTIONS//07JUL");
-        julLoadDatabase.start();
+        julLoadDatabase.start();*/
         LoadDatabase augLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//08AUG", "C://Learn//OriginalData//NIFTY_OPTIONS//08AUG");
         augLoadDatabase.start();
         LoadDatabase sepLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//09SEP", "C://Learn//OriginalData//NIFTY_OPTIONS//09SEP");
@@ -27,9 +43,9 @@ public class RunThreads {
         LoadDatabase novLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//11NOV", "C://Learn//OriginalData//NIFTY_OPTIONS//11NOV");
         novLoadDatabase.start();
         LoadDatabase decLoadDatabase = new LoadDatabase("C://Learn//OriginalData//INDICES//12DEC", "C://Learn//OriginalData//NIFTY_OPTIONS//12DEC");
-        decLoadDatabase.start(); 
+        decLoadDatabase.start();
 
-        LoadDatabase janLoadDatabase1 = new LoadDatabase("C://Learn//OriginalData//INDICES//01JAN", "C://Learn//OriginalData//NIFTY_OPTIONS//01JAN//GFDLNFO_OPTIONS_01012018");
+        /*LoadDatabase janLoadDatabase1 = new LoadDatabase("C://Learn//OriginalData//INDICES//01JAN", "C://Learn//OriginalData//NIFTY_OPTIONS//01JAN//GFDLNFO_OPTIONS_01012018");
         janLoadDatabase1.start();
 
         LoadDatabase janLoadDatabase2 = new LoadDatabase("C://Learn//OriginalData//INDICES//01JAN", "C://Learn//OriginalData//NIFTY_OPTIONS//01JAN//GFDLNFO_OPTIONS_02012018");

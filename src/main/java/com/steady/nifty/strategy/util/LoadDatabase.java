@@ -40,11 +40,11 @@ public class LoadDatabase extends Thread {
             // Load INDICES tick data
             File indicesFolder = new File(indicesPath);
             if (indicesFolder.exists() && indicesFolder.isDirectory()) {
-                System.out.println("** Data loading in progress for INDICES -> " + indicesPath +"\n");
-                goThroughIndicesFiles(connection, statement, indicesFolder.listFiles());
+                //System.out.println("** Data loading in progress for INDICES -> " + indicesPath +"\n");
+                //goThroughIndicesFiles(connection, statement, indicesFolder.listFiles());
                 System.out.println("** Data successfully loaded for INDICES -> " + indicesPath +"\n");
             } else {
-                System.out.println("ERROR: Couldn't find INDICES folder.\n");
+                //System.out.println("ERROR: Couldn't find INDICES folder.\n");
             }
 
             // Load NIFTY OPTIONS tick data
