@@ -20,9 +20,12 @@ import com.steady.nifty.strategy.repository.NiftyOHLCRepository;
 import com.steady.nifty.strategy.repository.NiftyRepository;
 import com.steady.nifty.strategy.repository.WorkingDayRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @Transactional
 @Validated
+@Slf4j
 public class NiftyOHLCServiceImpl implements NiftyOHLCService {
 
     private final NiftyOHLCRepository niftyOHLCRepository;
@@ -48,13 +51,18 @@ public class NiftyOHLCServiceImpl implements NiftyOHLCService {
         Iterable<WorkingDay> workingDays = workingDayRepository.findAllByOrderByDay();
 
         for (WorkingDay workingDay : workingDays) {
-            System.out.println("Working date: " + workingDay.getDay().toString());
+            log.info("Working date: " + workingDay.getDay().toString());
             LocalDateTime startTime = LocalDateTime.of(workingDay.getDay(), LocalTime.parse("09:15:00"));
             LocalDateTime endTime = LocalDateTime.of(workingDay.getDay(), LocalTime.parse("15:30:00"));
-            Iterable<Nifty> niftyTicks = niftyRepository.findNiftyTicksForDay(startTime, endTime);
-            NiftyOHLC niftyOHLC = calculateOHLC(workingDay.getDay(), workingDay.getDay(), workingDay.getIsExpiryDay(),
+            List<Nifty> niftyTicks = niftyRepository.findNiftyTicksForDay(startTime, endTime);
+            if(niftyTicks.isEmpty()) {
+                log.error("ERROR: Nifty value not found for the date : " + workingDay.getDay());
+                continue;
+            } else {
+                NiftyOHLC niftyOHLC = calculateOHLC(workingDay.getDay(), workingDay.getDay(), workingDay.getIsExpiryDay(),
                     "D", niftyTicks);
-            listToInsert.add(niftyOHLC);
+                listToInsert.add(niftyOHLC);
+            }
         }
         List<NiftyOHLC> savedNiftyOHLCList = niftyOHLCRepository.saveAll(listToInsert);
         return savedNiftyOHLCList.size() == listToInsert.size();
@@ -69,27 +77,35 @@ public class NiftyOHLCServiceImpl implements NiftyOHLCService {
         LocalDateTime highDateTime = null;
         LocalDateTime lowDateTime = null;
 
-        boolean isFirstEntry = true;
-        for (Nifty niftyTick : niftyTicks) {
-            BigDecimal tradePrice = niftyTick.getValue();
-            if (isFirstEntry) {
-                open = high = low = close = tradePrice;
-                highDateTime = lowDateTime = niftyTick.getDateTime();
-                isFirstEntry = false;
-            } else {
-                // Set highest price
-                if (high.subtract(tradePrice).intValue() < 0) {
-                    high = tradePrice;
-                    highDateTime = niftyTick.getDateTime();
+        try {
+            boolean isFirstEntry = true;
+            for (Nifty niftyTick : niftyTicks) {
+                BigDecimal tradePrice = niftyTick.getValue();
+                if(tradePrice == null) {
+                    log.error("ERROR: Nifty value not found for the date : " + startDate);
+                    continue;
                 }
-                // Set lowest price
-                if (low.subtract(tradePrice).intValue() > 0) {
-                    low = tradePrice;
-                    lowDateTime = niftyTick.getDateTime();
+                if (isFirstEntry) {
+                    open = high = low = close = tradePrice;
+                    highDateTime = lowDateTime = niftyTick.getDateTime();
+                    isFirstEntry = false;
+                } else {
+                    // Set highest price
+                    if (high.subtract(tradePrice).intValue() < 0) {
+                        high = tradePrice;
+                        highDateTime = niftyTick.getDateTime();
+                    }
+                    // Set lowest price
+                    if (low.subtract(tradePrice).intValue() > 0) {
+                        low = tradePrice;
+                        lowDateTime = niftyTick.getDateTime();
+                    }
+                    // Set close price
+                    close = tradePrice;
                 }
-                // Set close price
-                close = tradePrice;
             }
+        } catch (NullPointerException npe) {
+            log.error("Failed for the date : " + startDate);
         }
         NiftyOHLC niftyOHLC = new NiftyOHLC();
         niftyOHLC.setOpen(open);
